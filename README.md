@@ -46,7 +46,7 @@ The Power BI dashboard has three pages (Executive Overview, Delivery & Customer 
 | Data cleaning | Latest review per order, English category names, `customer_unique_id` for real customers, analysis window | [`src/01_audit_and_clean.py`](src/01_audit_and_clean.py) |
 | SQL analysis | Joins, window functions, CTEs for the core questions | [`sql/analysis.sql`](sql/analysis.sql) |
 | KPIs and statistics | Revenue, AOV, late rate, Mann-Whitney test, Spearman correlation | [`src/02_analysis.py`](src/02_analysis.py) |
-| Dashboard (Power BI) | Data model (2 tables + calendar), 15 DAX measures, 2 report pages | [`powerbi/`](powerbi/) |
+| Dashboard (Power BI) | Data model (2 tables + calendar), 17 DAX measures, 2 report pages | [`powerbi/`](powerbi/) |
 | Dashboard (HTML) | Interactive version, works offline | [`dashboard/olist_dashboard.html`](dashboard/olist_dashboard.html) |
 | Insights | Findings, recommendations, limitations | this README and [`reports/executive_summary.md`](reports/executive_summary.md) |
 
