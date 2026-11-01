@@ -1,0 +1,21 @@
+# Raw and processed data are too large for GitHub - download them from Kaggle (link in README)
+data/
+
+# Power BI local cache and the generated project (it contains a local file path).
+# Regenerate it with: python powerbi/build_pbip.py
+.pbi/
+*.pbix.bak
+powerbi/olist_dashboard.pbip
+powerbi/olist_dashboard.Report/
+powerbi/olist_dashboard.SemanticModel/
+
+# Personal scratch notebook with local paths: remove this line once it is clean
+notebook/
+
+# Private drafts (LinkedIn post, CV bullet, interview answer)
+reports/linkedin_post.md
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

@@ -1,0 +1,90 @@
+// NOTE: the finished example (olist_dashboard.pbip) names its tables orders and items
+// instead of orders_clean and items_clean, and Item Revenue filters through orders[order_status].
+// =====================================================================
+// Olist dashboard: DAX measures and columns
+// Tables: orders_clean (one row per order), items_clean (one row per item), Calendar
+// Expected values (from reports/kpis.json) are in the comments: if your
+// number is different, something is wrong in the model, so fix it before building visuals.
+// =====================================================================
+
+// ---------- CALCULATED TABLE: Calendar (Modeling > New table) ----------
+Calendar =
+ADDCOLUMNS (
+    CALENDAR ( DATE ( 2017, 1, 1 ), DATE ( 2018, 8, 31 ) ),
+    "Year", YEAR ( [Date] ),
+    "Month Number", MONTH ( [Date] ),
+    "Month", FORMAT ( [Date], "yyyy-MM" )
+)
+
+// ---------- CALCULATED COLUMNS on orders_clean (Table tools > New column) ----------
+Purchase Date = DATE ( YEAR ( orders_clean[order_purchase_timestamp] ), MONTH ( orders_clean[order_purchase_timestamp] ), DAY ( orders_clean[order_purchase_timestamp] ) )
+
+Delivery Status =
+SWITCH ( TRUE (),
+    ISBLANK ( orders_clean[is_late] ), "n/a",
+    orders_clean[is_late] = TRUE (), "Late",
+    "On time" )
+
+Delivery Bucket =
+SWITCH ( TRUE (),
+    ISBLANK ( orders_clean[delivery_days] ), "n/a",
+    orders_clean[delivery_days] <= 7,  "1. <= 7 days",
+    orders_clean[delivery_days] <= 14, "2. 8-14 days",
+    orders_clean[delivery_days] <= 21, "3. 15-21 days",
+    orders_clean[delivery_days] <= 28, "4. 22-28 days",
+    "5. > 28 days" )
+
+// ---------- MEASURES (Modeling > New measure). Put them in a table called "_Measures" ----------
+Revenue =
+CALCULATE ( SUM ( orders_clean[revenue] ), orders_clean[order_status] = "delivered" )
+// expected: 13,181,027
+
+Delivered Orders =
+CALCULATE ( COUNTROWS ( orders_clean ), orders_clean[order_status] = "delivered" )
+// expected: 96,211
+
+Average Order Value = DIVIDE ( [Revenue], [Delivered Orders] )
+// expected: 137.00
+
+Customers =
+CALCULATE ( DISTINCTCOUNT ( orders_clean[customer_unique_id] ), orders_clean[order_status] = "delivered" )
+// expected: 93,104
+
+Average Review Score =
+CALCULATE ( AVERAGE ( orders_clean[review_score] ), orders_clean[order_status] = "delivered" )
+// expected: 4.16
+
+Average Delivery Days = AVERAGE ( orders_clean[delivery_days] )
+// expected: 12.54
+
+Late Rate =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( orders_clean ), orders_clean[is_late] = TRUE () ),
+    CALCULATE ( COUNTROWS ( orders_clean ), NOT ( ISBLANK ( orders_clean[is_late] ) ) )
+)
+// expected: 8.1%
+
+Repeat Customers =
+COUNTROWS (
+    FILTER (
+        VALUES ( orders_clean[customer_unique_id] ),
+        CALCULATE ( DISTINCTCOUNT ( orders_clean[order_id] ), orders_clean[order_status] = "delivered" ) > 1
+    )
+)
+// expected: 2,789
+
+Repeat Rate = DIVIDE ( [Repeat Customers], [Customers] )
+// expected: 3.0%
+
+Revenue Same Period Last Year =
+CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( Calendar[Date] ) )
+
+Revenue YoY % = DIVIDE ( [Revenue] - [Revenue Same Period Last Year], [Revenue Same Period Last Year] )
+// Jan-Aug 2018 vs Jan-Aug 2017: expected +141%
+
+Item Revenue =
+CALCULATE ( SUM ( items_clean[price] ), items_clean[order_status] = "delivered" )
+// expected: same as Revenue (13,181,027), use it with the category and state visuals
+
+Share of Revenue = DIVIDE ( [Item Revenue], CALCULATE ( [Item Revenue], ALL ( items_clean[category] ) ) )
+// health_beauty expected: 9.3%
